@@ -10,7 +10,7 @@ public class CharacterManager : MonoBehaviour
     public CharacterData[] _characters = new CharacterData[4];
     private int playerCoins;
     private int selectedCharacterIndex = 0;
-    private GameObject spawnedCharacter; // 생성된 캐릭터를 저장하는 변수 추가
+    private GameObject spawnedCharacter;
 
     private void Awake()
     {
@@ -28,7 +28,7 @@ public class CharacterManager : MonoBehaviour
 
     void LoadCharacterData()
     {
-        playerCoins = PlayerPrefs.GetInt("Kiwi", 600);
+        playerCoins = PlayerPrefs.GetInt("KiwiScore", 600);
 
         for (int i = 0; i < _characters.Length; i++)
         {
@@ -38,26 +38,26 @@ public class CharacterManager : MonoBehaviour
             }
         }
 
-        // 첫 번째 캐릭터는 기본적으로 구매된 것으로 설정
         if (!_characters[0].isPurchased)
         {
             _characters[0].isPurchased = true;
-            PlayerPrefs.SetInt(_characters[0].characterName, 0);
+            PlayerPrefs.SetInt(_characters[0].characterName, 1);
         }
     }
 
     // 캐릭터 구매 함수
     public bool BuyCharacter(int index)
     {
-        if (index == 0) return false; // 첫 번째 캐릭터는 구매 불가
+        if (index == 0) return false;
 
         if (!_characters[index].isPurchased && playerCoins >= _characters[index].price)
         {
             playerCoins -= _characters[index].price;
-            PlayerPrefs.SetInt("Kiwi", playerCoins);
-            _characters[index].isPurchased = true;
-            PlayerPrefs.SetInt(_characters[index].characterName, 0);
+            PlayerPrefs.SetInt("KiwiScore", playerCoins);
+            PlayerPrefs.SetInt(_characters[index].characterName, 1);
             PlayerPrefs.Save();
+
+            LoadCharacterData();
             return true;
         }
         return false;
@@ -66,7 +66,14 @@ public class CharacterManager : MonoBehaviour
     // 선택된 캐릭터를 반환하는 함수
     public CharacterData GetSelectedCharacter()
     {
-        return _characters[PlayerPrefs.GetInt("SelectedCharacterIndex", 0)];
+        int selectedIndex = PlayerPrefs.GetInt("SelectedCharacterIndex", 0);
+
+        if (selectedIndex < 0 || selectedIndex >= _characters.Length)
+            return null;
+
+        _characters[selectedIndex].isPurchased = PlayerPrefs.GetInt(_characters[selectedIndex].characterName, 0) == 1;
+
+        return _characters[selectedIndex];
     }
 
     // 선택된 캐릭터 프리팹을 반환하는 함수
@@ -88,15 +95,15 @@ public class CharacterManager : MonoBehaviour
         spawnedCharacter = character;
     }
 
-    
+
     public void MovePlayer()
     {
         if (spawnedCharacter != null)
         {
-            
+
             spawnedCharacter.GetComponent<PlayerController>().PlayerMove();
         }
-        
+
     }
 
     public void TurnPlayer()
@@ -110,7 +117,7 @@ public class CharacterManager : MonoBehaviour
 
     public void ReStartPlayer()
     {
-        if(spawnedCharacter != null)
+        if (spawnedCharacter != null)
         {
             spawnedCharacter.GetComponent<PlayerController>().RestartButton();
         }
@@ -131,9 +138,6 @@ public class CharacterManager : MonoBehaviour
         PlayerPrefs.SetInt("SelectedCharacterIndex", index);
         PlayerPrefs.Save();
     }
-
-
-
 
 }
 
